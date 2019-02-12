@@ -3,6 +3,9 @@ package com.aitusoftware.recall.benchmark;
 import com.aitusoftware.recall.store.BufferStore;
 import com.aitusoftware.recall.store.ByteBufferOps;
 import com.aitusoftware.recall.store.Store;
+import com.aitusoftware.recall.store.UnsafeBufferOps;
+import net.openhft.chronicle.map.ChronicleMap;
+import org.agrona.concurrent.UnsafeBuffer;
 import org.openjdk.jmh.annotations.*;
 
 import java.nio.ByteBuffer;
@@ -20,7 +23,12 @@ public class StoreBenchmark
     private static final int IDS_MASK = IDS_LENGTH - 1;
     private final Store<ByteBuffer> byteBufferStore = new BufferStore<>(
         64, 20_000, ByteBuffer::allocateDirect, new ByteBufferOps());
-    private final OrderByteBufferTranscoder transcoder = new OrderByteBufferTranscoder();
+    private final Store<UnsafeBuffer> unsafeBufferStore = new BufferStore<>(
+        64, 20_000, len ->
+        new UnsafeBuffer(ByteBuffer.allocateDirect(len)), new UnsafeBufferOps());
+    private final OrderByteBufferTranscoder byteBufferTranscoder = new OrderByteBufferTranscoder();
+    private final OrderUnsafeBufferTranscoder unsafeBufferTranscoder = new OrderUnsafeBufferTranscoder();
+    private ChronicleMap<Long, Order> chronicleMap;
     private final Order[] testData = new Order[TEST_DATA_LENGTH];
     private final long[] ids = new long[IDS_LENGTH];
     private final Random random = new Random(12983719837394L);
@@ -41,16 +49,39 @@ public class StoreBenchmark
         {
             ids[i] = random.nextLong();
         }
+        chronicleMap = ChronicleMap.of(Long.class, Order.class)
+            .entries(20_000).averageValue(testData[0])
+            .create();
     }
 
     @Benchmark
-    public long storeEntry()
+    public long storeEntryByteBuffer()
     {
         final Order testDatum = testData[dataIndex(counter)];
         testDatum.setId(ids[idIndex(counter)]);
         counter++;
-        byteBufferStore.store(transcoder, testDatum, transcoder);
+        byteBufferStore.store(byteBufferTranscoder, testDatum, byteBufferTranscoder);
         return byteBufferStore.size();
+    }
+
+    @Benchmark
+    public long storeEntryUnsafeBuffer()
+    {
+        final Order testDatum = testData[dataIndex(counter)];
+        testDatum.setId(ids[idIndex(counter)]);
+        counter++;
+        unsafeBufferStore.store(unsafeBufferTranscoder, testDatum, unsafeBufferTranscoder);
+        return unsafeBufferStore.size();
+    }
+
+    @Benchmark
+    public long storeEntryChronicleMap()
+    {
+        final Order testDatum = testData[dataIndex(counter)];
+        testDatum.setId(ids[idIndex(counter)]);
+        counter++;
+        chronicleMap.put(testDatum.getId(), testDatum);
+        return chronicleMap.size();
     }
 
     private static int idIndex(final long counter)

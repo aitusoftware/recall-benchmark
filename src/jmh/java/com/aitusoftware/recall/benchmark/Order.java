@@ -1,8 +1,9 @@
 package com.aitusoftware.recall.benchmark;
 
 import com.aitusoftware.recall.persistence.AsciiCharSequence;
+import net.openhft.chronicle.bytes.BytesMarshallable;
 
-public final class Order
+public final class Order implements BytesMarshallable
 {
     private long id;
     private double quantity;
