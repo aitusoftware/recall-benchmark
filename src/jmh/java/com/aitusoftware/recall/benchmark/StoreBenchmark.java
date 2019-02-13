@@ -55,6 +55,7 @@ public class StoreBenchmark
         }
         chronicleMap = ChronicleMap.of(LongValue.class, Order.class)
             .entries(20_000).averageValue(testData[0])
+            .putReturnsNull(true)
             .create();
         longRef.bytesStore(Bytes.allocateDirect(8), 0, 8);
     }
@@ -63,14 +64,12 @@ public class StoreBenchmark
     {
         final StoreBenchmark storeBenchmark = new StoreBenchmark();
         storeBenchmark.setup();
-        storeBenchmark.storeEntryChronicleMap();
-        storeBenchmark.storeEntryChronicleMap();
-        storeBenchmark.storeEntryChronicleMap();
-        storeBenchmark.storeEntryChronicleMap();
-        storeBenchmark.storeEntryChronicleMap();
-        storeBenchmark.storeEntryChronicleMap();
-        storeBenchmark.storeEntryChronicleMap();
-        storeBenchmark.storeEntryChronicleMap();
+        long sum = 0L;
+        while (!Thread.currentThread().isInterrupted())
+        {
+            sum += storeBenchmark.storeEntryChronicleMap();
+        }
+        System.out.println(sum);
     }
 
     @Benchmark
