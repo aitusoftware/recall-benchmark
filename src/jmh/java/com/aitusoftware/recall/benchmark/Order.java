@@ -1,7 +1,10 @@
 package com.aitusoftware.recall.benchmark;
 
 import com.aitusoftware.recall.persistence.AsciiCharSequence;
+import net.openhft.chronicle.bytes.BytesIn;
 import net.openhft.chronicle.bytes.BytesMarshallable;
+import net.openhft.chronicle.bytes.BytesOut;
+import net.openhft.chronicle.core.io.IORuntimeException;
 
 public final class Order implements BytesMarshallable
 {
@@ -11,7 +14,7 @@ public final class Order implements BytesMarshallable
     private long sessionId;
     private int venueId;
     private long timestamp;
-    private AsciiCharSequence symbol;
+    private AsciiCharSequence symbol = new AsciiCharSequence(64);
 
     public void set(
         final long id, final double quantity, final double price,
@@ -24,6 +27,41 @@ public final class Order implements BytesMarshallable
         this.venueId = venueId;
         this.timestamp = timestamp;
         this.symbol = new AsciiCharSequence(symbol);
+    }
+
+    @Override
+    public void readMarshallable(final BytesIn buffer) throws IORuntimeException
+    {
+        setId(buffer.readLong());
+        setSessionId(buffer.readLong());
+        setTimestamp(buffer.readLong());
+        setQuantity(Double.longBitsToDouble(buffer.readLong()));
+        setPrice(Double.longBitsToDouble(buffer.readLong()));
+        setVenueId(buffer.readInt());
+        final int symbolLength = buffer.readInt();
+        final AsciiCharSequence symbolSequence = getSymbolSequence();
+        symbolSequence.reset();
+        for (int i = 0; i < symbolLength; i++)
+        {
+            symbolSequence.append((char) buffer.readInt());
+        }
+    }
+
+    @Override
+    public void writeMarshallable(final BytesOut buffer)
+    {
+        buffer.writeLong(getId());
+        buffer.writeLong(getSessionId());
+        buffer.writeLong(getTimestamp());
+        buffer.writeLong(Double.doubleToRawLongBits(getQuantity()));
+        buffer.writeLong(Double.doubleToRawLongBits(getPrice()));
+        buffer.writeInt(getVenueId());
+        final int length = getSymbol().length();
+        buffer.writeInt(length);
+        for (int i = 0; i < length; i++)
+        {
+            buffer.writeInt(getSymbol().charAt(i));
+        }
     }
 
     public long getId()

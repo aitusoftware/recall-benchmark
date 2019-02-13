@@ -4,6 +4,9 @@ import com.aitusoftware.recall.store.BufferStore;
 import com.aitusoftware.recall.store.ByteBufferOps;
 import com.aitusoftware.recall.store.Store;
 import com.aitusoftware.recall.store.UnsafeBufferOps;
+import net.openhft.chronicle.bytes.Bytes;
+import net.openhft.chronicle.bytes.ref.BinaryLongReference;
+import net.openhft.chronicle.core.values.LongValue;
 import net.openhft.chronicle.map.ChronicleMap;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.openjdk.jmh.annotations.*;
@@ -28,10 +31,11 @@ public class StoreBenchmark
         new UnsafeBuffer(ByteBuffer.allocateDirect(len)), new UnsafeBufferOps());
     private final OrderByteBufferTranscoder byteBufferTranscoder = new OrderByteBufferTranscoder();
     private final OrderUnsafeBufferTranscoder unsafeBufferTranscoder = new OrderUnsafeBufferTranscoder();
-    private ChronicleMap<Long, Order> chronicleMap;
+    private ChronicleMap<LongValue, Order> chronicleMap;
     private final Order[] testData = new Order[TEST_DATA_LENGTH];
     private final long[] ids = new long[IDS_LENGTH];
     private final Random random = new Random(12983719837394L);
+    private final BinaryLongReference longRef = new BinaryLongReference();
 
     private long counter = 0;
 
@@ -49,9 +53,24 @@ public class StoreBenchmark
         {
             ids[i] = random.nextLong();
         }
-        chronicleMap = ChronicleMap.of(Long.class, Order.class)
+        chronicleMap = ChronicleMap.of(LongValue.class, Order.class)
             .entries(20_000).averageValue(testData[0])
             .create();
+        longRef.bytesStore(Bytes.allocateDirect(8), 0, 8);
+    }
+
+    public static void main(String[] args)
+    {
+        final StoreBenchmark storeBenchmark = new StoreBenchmark();
+        storeBenchmark.setup();
+        storeBenchmark.storeEntryChronicleMap();
+        storeBenchmark.storeEntryChronicleMap();
+        storeBenchmark.storeEntryChronicleMap();
+        storeBenchmark.storeEntryChronicleMap();
+        storeBenchmark.storeEntryChronicleMap();
+        storeBenchmark.storeEntryChronicleMap();
+        storeBenchmark.storeEntryChronicleMap();
+        storeBenchmark.storeEntryChronicleMap();
     }
 
     @Benchmark
@@ -80,7 +99,8 @@ public class StoreBenchmark
         final Order testDatum = testData[dataIndex(counter)];
         testDatum.setId(ids[idIndex(counter)]);
         counter++;
-        chronicleMap.put(testDatum.getId(), testDatum);
+        longRef.setValue(testDatum.getId());
+        chronicleMap.put(longRef, testDatum);
         return chronicleMap.size();
     }
 
