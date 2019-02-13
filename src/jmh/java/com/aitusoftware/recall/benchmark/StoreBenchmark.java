@@ -60,18 +60,6 @@ public class StoreBenchmark
         longRef.bytesStore(Bytes.allocateDirect(8), 0, 8);
     }
 
-    public static void main(String[] args)
-    {
-        final StoreBenchmark storeBenchmark = new StoreBenchmark();
-        storeBenchmark.setup();
-        long sum = 0L;
-        while (!Thread.currentThread().isInterrupted())
-        {
-            sum += storeBenchmark.storeEntryChronicleMap();
-        }
-        System.out.println(sum);
-    }
-
     @Benchmark
     public long storeEntryByteBuffer()
     {
