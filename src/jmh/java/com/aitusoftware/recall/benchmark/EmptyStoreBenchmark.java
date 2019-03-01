@@ -16,7 +16,7 @@ import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-@BenchmarkMode(Mode.Throughput)
+//@BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @State(Scope.Benchmark)
 public class EmptyStoreBenchmark
@@ -133,7 +133,7 @@ public class EmptyStoreBenchmark
     public void getSingleEntryChronicleMap(final Blackhole bh)
     {
         longRef.setValue(ids[idIndex(SAMPLE_POINT)]);
-        chronicleMap.getUsing(longRef, container);
+        bh.consume(chronicleMap.getUsing(longRef, container));
     }
 
     private static int idIndex(final long counter)
