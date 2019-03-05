@@ -44,6 +44,7 @@ public class StoreBenchmark
     private final Random random = new Random(12983719837394L);
     private final BinaryLongReference longRef = new BinaryLongReference();
     private final Order container = new Order();
+    private final OrderCacheSerialiser valueSerializer = new OrderCacheSerialiser();
     private ChronicleMap<LongValue, Order> chronicleMap;
     private OHCache<LongValue, Order> ohCache;
 
@@ -70,7 +71,7 @@ public class StoreBenchmark
         longRef.bytesStore(Bytes.allocateDirect(8), 0, 8);
         ohCache = OHCacheBuilder.<LongValue, Order>newBuilder()
                 .keySerializer(new LongValueCacheSerializer())
-                .valueSerializer(new OrderCacheSerialiser())
+                .valueSerializer(valueSerializer)
                 .fixedEntrySize(Long.BYTES, MAX_RECORD_LENGTH)
                 .capacity(ENTRIES)
                 .chunkSize(128)
@@ -94,75 +95,75 @@ public class StoreBenchmark
         }
     }
 
-    @Benchmark
-    public long storeEntryByteBuffer()
-    {
-        final Order testDatum = testData[dataIndex(counter)];
-        testDatum.setId(ids[idIndex(counter)]);
-        counter++;
-        byteBufferStore.store(byteBufferTranscoder, testDatum, byteBufferTranscoder);
-        return byteBufferStore.size();
-    }
+//    @Benchmark
+//    public long storeEntryByteBuffer()
+//    {
+//        final Order testDatum = testData[dataIndex(counter)];
+//        testDatum.setId(ids[idIndex(counter)]);
+//        counter++;
+//        byteBufferStore.store(byteBufferTranscoder, testDatum, byteBufferTranscoder);
+//        return byteBufferStore.size();
+//    }
+//
+//    @Benchmark
+//    public long storeEntryUnsafeBuffer()
+//    {
+//        final Order testDatum = testData[dataIndex(counter)];
+//        testDatum.setId(ids[idIndex(counter)]);
+//        counter++;
+//        unsafeBufferStore.store(unsafeBufferTranscoder, testDatum, unsafeBufferTranscoder);
+//        return unsafeBufferStore.size();
+//    }
+//
+//    @Benchmark
+//    public long storeEntryChronicleMap()
+//    {
+//        final Order testDatum = testData[dataIndex(counter)];
+//        testDatum.setId(ids[idIndex(counter)]);
+//        counter++;
+//        longRef.setValue(testDatum.getId());
+//        chronicleMap.put(longRef, testDatum);
+//        return chronicleMap.size();
+//    }
+//
+//    @Benchmark
+//    public long storeEntryOHCMap()
+//    {
+//        final Order testDatum = testData[dataIndex(counter)];
+//        testDatum.setId(ids[idIndex(counter)]);
+//        counter++;
+//        longRef.setValue(testDatum.getId());
+//        ohCache.put(longRef, testDatum);
+//        return ohCache.size();
+//    }
 
-    @Benchmark
-    public long storeEntryUnsafeBuffer()
-    {
-        final Order testDatum = testData[dataIndex(counter)];
-        testDatum.setId(ids[idIndex(counter)]);
-        counter++;
-        unsafeBufferStore.store(unsafeBufferTranscoder, testDatum, unsafeBufferTranscoder);
-        return unsafeBufferStore.size();
-    }
+//    @Benchmark
+//    public void getSingleEntryByteBuffer(final Blackhole bh)
+//    {
+//        bh.consume(byteBufferStore.load(ids[idIndex(SAMPLE_POINT)], byteBufferTranscoder, container));
+//    }
+//
+//    @Benchmark
+//    public void getSingleEntryUnsafeBuffer(final Blackhole bh)
+//    {
+//        bh.consume(unsafeBufferStore.load(ids[idIndex(SAMPLE_POINT)], unsafeBufferTranscoder, container));
+//    }
+//
+//    @Benchmark
+//    public void getSingleEntryChronicleMap(final Blackhole bh)
+//    {
+//        longRef.setValue(ids[idIndex(SAMPLE_POINT)]);
+//        bh.consume(chronicleMap.getUsing(longRef, container));
+//    }
+//
+//    @Benchmark
+//    public void getSingleEntryOHCMap(final Blackhole bh)
+//    {
+//        longRef.setValue(ids[idIndex(SAMPLE_POINT)]);
+//        bh.consume(ohCache.get(longRef));
+//    }
 
-    @Benchmark
-    public long storeEntryChronicleMap()
-    {
-        final Order testDatum = testData[dataIndex(counter)];
-        testDatum.setId(ids[idIndex(counter)]);
-        counter++;
-        longRef.setValue(testDatum.getId());
-        chronicleMap.put(longRef, testDatum);
-        return chronicleMap.size();
-    }
-
-    @Benchmark
-    public long storeEntryOHCMap()
-    {
-        final Order testDatum = testData[dataIndex(counter)];
-        testDatum.setId(ids[idIndex(counter)]);
-        counter++;
-        longRef.setValue(testDatum.getId());
-        ohCache.put(longRef, testDatum);
-        return ohCache.size();
-    }
-
-    @Benchmark
-    public void getSingleEntryByteBuffer(final Blackhole bh)
-    {
-        bh.consume(byteBufferStore.load(ids[idIndex(SAMPLE_POINT)], byteBufferTranscoder, container));
-    }
-
-    @Benchmark
-    public void getSingleEntryUnsafeBuffer(final Blackhole bh)
-    {
-        bh.consume(unsafeBufferStore.load(ids[idIndex(SAMPLE_POINT)], unsafeBufferTranscoder, container));
-    }
-
-    @Benchmark
-    public void getSingleEntryChronicleMap(final Blackhole bh)
-    {
-        longRef.setValue(ids[idIndex(SAMPLE_POINT)]);
-        bh.consume(chronicleMap.getUsing(longRef, container));
-    }
-
-    @Benchmark
-    public void getSingleEntryOHCMap(final Blackhole bh)
-    {
-        longRef.setValue(ids[idIndex(SAMPLE_POINT)]);
-        bh.consume(ohCache.get(longRef));
-    }
-
-    @Benchmark
+//    @Benchmark
     public void getRandomEntryByteBuffer(final Blackhole bh)
     {
         bh.consume(byteBufferStore.load(ids[idIndex(counter++)], byteBufferTranscoder, container));
@@ -174,7 +175,7 @@ public class StoreBenchmark
         bh.consume(unsafeBufferStore.load(ids[idIndex(counter++)], unsafeBufferTranscoder, container));
     }
 
-    @Benchmark
+//    @Benchmark
     public void getRandomEntryChronicleMap(final Blackhole bh)
     {
         longRef.setValue(ids[idIndex(counter++)]);
@@ -231,6 +232,8 @@ public class StoreBenchmark
         private static final int SYMBOL_LENGTH_OFFSET = (5 * Long.BYTES) + Integer.BYTES;
         private static final int SYMBOL_CHAR_BASE_OFFSET = (5 * Long.BYTES) + (2 * Integer.BYTES);
 
+        private final Order lastLoaded = new Order();
+
         @Override
         public void serialize(Order value, ByteBuffer buffer)
         {
@@ -253,7 +256,7 @@ public class StoreBenchmark
         @Override
         public Order deserialize(ByteBuffer buffer)
         {
-            final Order container = new Order();
+            final Order container = lastLoaded;
             final int offset = buffer.position();
             container.setId(buffer.getLong(offset));
             container.setSessionId(buffer.getLong(offset + SESSION_ID_OFFSET));

@@ -22,7 +22,7 @@ public class SequenceMapBenchmark
     private final ByteBuffer[] byteSequenceKeys = new ByteBuffer[KEY_COUNT];
     private CharSequenceMap charSequenceMap;
     private ByteSequenceMap byteSequenceMap;
-    @Param({"10", "100", "200", "500"})
+//    @Param({"10", "100", "200", "500"})
     private int keyLength = 10;
     private long counter;
 
